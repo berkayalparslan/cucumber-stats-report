@@ -2,7 +2,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-let options = {}
+let options = {};
 
 class StatsData {
   features = {};
@@ -259,7 +259,7 @@ function prepareRows(statsData) {
     const featureData = statsData.getFeature(feature);
     const emptyCell = createHtmlElement("td", "-");
     let featureRow = createHtmlElement("tr", "{ROW}");
-    featureData.number = featureIndex+1;
+    featureData.number = featureIndex + 1;
     const featureCells = parseDataIntoCells(featureData);
     featureRow = buildRow([
       featureCells.name,
@@ -268,14 +268,14 @@ function prepareRows(statsData) {
       featureCells.successRate,
       featureCells.count,
       featureCells.tags,
-      emptyCell
+      emptyCell,
     ]);
     rows.push(featureRow);
 
     Object.keys(featureData.elements).map((element, elementIndex) => {
       const elementData = featureData.getElement(element);
       let elementRow = createHtmlElement("tr", "innerText", "number");
-      elementData.number = elementIndex+1;
+      elementData.number = elementIndex + 1;
       const elementCells = parseDataIntoCells(elementData);
       elementRow = buildRow([
         featureCells.name,
@@ -284,19 +284,21 @@ function prepareRows(statsData) {
         elementCells.successRate,
         elementCells.count,
         elementCells.tags,
-        emptyCell
+        emptyCell,
       ]);
       rows.push(elementRow);
 
       Object.keys(elementData.steps).map((step, stepIndex) => {
         const stepData = elementData.getStep(step);
         let stepRow = createHtmlElement("tr", "innerText", "number");
-        stepData.number = stepIndex+1;
+        stepData.number = stepIndex + 1;
         stepData.name = stepData.stepId;
-      const stepCells = parseDataIntoCells(stepData);
-      const stepErrors = stepData.results.filter(result => result['error_message']);
-      const detailsCell = stepErrors.length > 0 ? '<td><button>Details</button></td>' : emptyCell;
-        
+        const stepCells = parseDataIntoCells(stepData);
+        const stepErrors = stepData.results.filter(
+          (result) => result["error_message"]
+        ).map(result => result.error_message);
+        const detailsCell = createDetailsCell(stepErrors);
+
         stepRow = buildRow([
           featureCells.name,
           elementCells.name,
@@ -304,7 +306,7 @@ function prepareRows(statsData) {
           stepCells.successRate,
           stepCells.count,
           emptyCell,
-          detailsCell
+          detailsCell,
         ]);
         rows.push(stepRow);
       });
@@ -313,19 +315,27 @@ function prepareRows(statsData) {
   return rows.join("");
 }
 
-function parseDataIntoCells(data){
-  const name = createHtmlElement('td', data.number + ' - ' + data.name, 'string');
+function createDetailsCell(errors) {
+  if (errors.length === 0) return createHtmlElement("td", "-");
+  const joinedErrors = errors.join('\n')
+  const detailsCell = `<td><button data-target="#errors-modal" class="details-btn" data-errors="${joinedErrors}">Details</button></td>`;
+  return detailsCell;
+}
+
+function parseDataIntoCells(data) {
+  const name = createHtmlElement(
+    "td",
+    data.number + " - " + data.name,
+    "string"
+  );
   const successRate = createHtmlElement(
     "td",
     data.successRateInPercent,
     "number"
-  );    
-  const count = createHtmlElement("td", data.count, "number");
-  const tags = createHtmlElement(
-    "td",
-    createBadges(data.tags)
   );
-  return {name, successRate, count, tags};
+  const count = createHtmlElement("td", data.count, "number");
+  const tags = createHtmlElement("td", createBadges(data.tags));
+  return { name, successRate, count, tags };
 }
 
 function buildRow(cells) {

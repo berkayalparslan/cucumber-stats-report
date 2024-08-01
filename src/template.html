@@ -11,6 +11,18 @@
 
   </head>
   <body data-bs-theme="light">
+    <div id="errors-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Errors list</h5>
+              </div>
+              <div class="modal-body">
+                <p>Modal body text goes here.</p>
+              </div>
+          </div>
+        </div>
+      </div>
     <div class="container-fluid mt-1">
       <div class="row">
         <div>
@@ -59,6 +71,40 @@
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.body.setAttribute('data-bs-theme',newTheme);
          });
+
+         const detailsButtons = document.querySelectorAll('.details-btn');
+         detailsButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const errorsData = btn.getAttribute('data-errors');
+                
+                const modalBody = document.querySelector('#errors-modal .modal-body');
+                modalBody.innerHTML = buildErrorsList(errorsData);
+                $('#errors-modal').modal('show')
+            })
+         })
+
+         function buildErrorsList(errors){
+            const listGroupTemplate = `
+            <ul class="list-group">{LIST_GROUP}</ul>`
+            const listGroupItemTemplate = '<li class="list-group-item">{LIST_GROUP_ITEM}</li>';
+            const splittedErrors = errors.split('\n');
+            const errorCounts = countErrors(splittedErrors);
+            const mappedErrors = Object.keys(errorCounts).map(err => listGroupItemTemplate.replace('{LIST_GROUP_ITEM}', `(${errorCounts[err]}) ` + err))
+            let listGroupItems = mappedErrors.join('');
+            const list = listGroupTemplate.replace('{LIST_GROUP}', listGroupItems);
+            return list;
+         }
+
+         function countErrors(errors){
+            const errorsCount = {};
+            errors.forEach(err => {
+                if(!errorsCount[err]) {
+                    errorsCount[err] = 1;
+                }
+                errorsCount[err]++;
+            })
+            return errorsCount;
+         }
     </script>
   </body>
 </html>
