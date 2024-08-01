@@ -272,85 +272,69 @@ function prepareRows(statsData) {
   Object.keys(statsData.features).map((feature, featureIndex) => {
     const featureData = statsData.getFeature(feature);
     const emptyCell = createHtmlElement("td", "-");
-
     let featureRow = createHtmlElement("tr", "{ROW}");
-    const featureName = createHtmlElement(
-      "td",
-      featureIndex + 1 + " - " + featureData.name,
-      "string"
-    );
-    const featureSuccessRate = createHtmlElement(
-      "td",
-      featureData.successRateInPercent,
-      "number"
-    );
-    const featureCount = createHtmlElement("td", featureData.count, "number");
-    const featureTags = createHtmlElement(
-      "td",
-      createBadges(featureData.tags)
-    );
+    featureData.number = featureIndex+1;
+    const featureCells = parseDataIntoCells(featureData);
     featureRow = buildRow([
-      featureName,
+      featureCells.name,
       emptyCell,
       emptyCell,
-      featureSuccessRate,
-      featureCount,
-      featureTags,
+      featureCells.successRate,
+      featureCells.count,
+      featureCells.tags,
     ]);
     rows.push(featureRow);
 
     Object.keys(featureData.elements).map((element, elementIndex) => {
       const elementData = featureData.getElement(element);
       let elementRow = createHtmlElement("tr", "innerText", "number");
-      const elementName = createHtmlElement("td", (elementIndex+1) + ' - ' + elementData.name, "string");
-      const elementSuccessRate = createHtmlElement(
-        "td",
-        elementData.successRateInPercent,
-        "number"
-      );
-      const elementCount = createHtmlElement("td", elementData.count, "number");
-      const elementTags = createHtmlElement(
-        "td",
-        createBadges(elementData.tags)
-      );
+      elementData.number = elementIndex+1;
+      const elementCells = parseDataIntoCells(elementData);
       elementRow = buildRow([
-        featureName,
-        elementName,
+        featureCells.name,
+        elementCells.name,
         emptyCell,
-        elementSuccessRate,
-        elementCount,
-        elementTags,
+        elementCells.successRate,
+        elementCells.count,
+        elementCells.tags,
       ]);
       rows.push(elementRow);
 
       Object.keys(elementData.steps).map((step, stepIndex) => {
         const stepData = elementData.getStep(step);
         let stepRow = createHtmlElement("tr", "innerText", "number");
-        const stepName = createHtmlElement(
-          "td",
-          stepIndex + 1 + " - " + step,
-          "string"
-        );
-        const stepSuccessRate = createHtmlElement(
-          "td",
-          stepData.successRateInPercent,
-          "number"
-        );
-        const stepCount = createHtmlElement("td", stepData.count, "number");
-        stepRow = stepRow.replace(
-          "innerText",
-          featureName +
-            elementName +
-            stepName +
-            stepSuccessRate +
-            stepCount +
-            emptyCell
-        );
+        stepData.number = stepIndex+1;
+        stepData.name = stepData.stepId;
+      const stepCells = parseDataIntoCells(stepData);
+        
+        stepRow = buildRow([
+          featureCells.name,
+          elementCells.name,
+          stepCells.name,
+          stepCells.successRate,
+          stepCells.count,
+          emptyCell,
+        ]);
         rows.push(stepRow);
       });
     });
   });
   return rows.join("");
+}
+
+function parseDataIntoCells(data){
+  const name = createHtmlElement('td', data.number + ' - ' + data.name, 'string');
+  const successRate = createHtmlElement(
+    "td",
+    data.successRateInPercent,
+    "number"
+  );    
+  const count = createHtmlElement("td", data.count, "number");
+  const tags = createHtmlElement(
+    "td",
+    createBadges(data.tags)
+  );
+  return {name, successRate, count, tags};
 }
 
 function buildRow(cells) {
