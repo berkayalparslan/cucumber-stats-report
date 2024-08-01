@@ -268,6 +268,7 @@ function prepareRows(statsData) {
       featureCells.successRate,
       featureCells.count,
       featureCells.tags,
+      emptyCell
     ]);
     rows.push(featureRow);
 
@@ -283,6 +284,7 @@ function prepareRows(statsData) {
         elementCells.successRate,
         elementCells.count,
         elementCells.tags,
+        emptyCell
       ]);
       rows.push(elementRow);
 
@@ -292,6 +294,8 @@ function prepareRows(statsData) {
         stepData.number = stepIndex+1;
         stepData.name = stepData.stepId;
       const stepCells = parseDataIntoCells(stepData);
+      const stepErrors = stepData.results.filter(result => result['error_message']);
+      const detailsCell = stepErrors.length > 0 ? '<td><button>Details</button></td>' : emptyCell;
         
         stepRow = buildRow([
           featureCells.name,
@@ -300,6 +304,7 @@ function prepareRows(statsData) {
           stepCells.successRate,
           stepCells.count,
           emptyCell,
+          detailsCell
         ]);
         rows.push(stepRow);
       });
