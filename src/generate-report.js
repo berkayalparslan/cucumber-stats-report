@@ -11,13 +11,17 @@ const jsonReportsDir = jsonDirFlagGiven
   : "./reports/";
 const shouldShowOutput = args.includes("--showOutput");
 const shouldGenerateStatsReport = !args.includes("--no-generate");
-const outputDirFlagIndex = args.findIndex(arg => arg === '--outputDir')
+const outputDirFlagIndex = args.findIndex((arg) => arg === "--outputDir");
 const isOutputFlagSet = outputDirFlagIndex !== -1;
-const outputDir = isOutputFlagSet ? outputDirFlagIndex+1 : './reports/stats/';
+const outputDir = isOutputFlagSet ? outputDirFlagIndex + 1 : "./reports/stats/";
 
 class StatsData {
   features = {};
-  constructor() {}
+  createdDate;
+
+  constructor() {
+    this.createdDate = new Date();
+  }
 
   getFeature(featureId) {
     if (!this.features[featureId]) {
@@ -241,7 +245,7 @@ function collectStatsFromReportFile(features, statsData) {
 }
 
 function generateHTMLStatsReport(statsData) {
-  const html = generateHTML(statsData);
+  const html = buildHTML(statsData);
   const timestamp = new Date().toISOString().split(".")[0].replaceAll(":", "");
   const filePath = path.join(outputDir, `stats_${timestamp}.html`);
 
@@ -253,110 +257,14 @@ function generateHTMLStatsReport(statsData) {
   return filePath;
 }
 
-function generateHTML(statsData) {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        th {
-            cursor: pointer;
-        }
-    </style>
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-    const table = document.querySelector('table');
-    const headers = table.querySelectorAll('th');
-    const tableBody = table.querySelector('tbody');
-    const rows = tableBody.querySelectorAll('tr');
-
-    const directions = Array.from(headers).map(() => '');
-
-    // Transform the content of given cell in given column
-    const transform = (index, content) => {
-        // Get the data type of column
-        const type = headers[index].getAttribute('data-type');
-        switch (type) {
-            case 'number':
-                return parseFloat(content);
-            case 'string':
-            default:
-                return content;
-        }
-    };
-
-    const sortColumn = (index) => {
-        // Get the current direction
-        const direction = directions[index] || 'asc';
-
-        // A factor based on the direction
-        const multiplier = direction === 'asc' ? 1 : -1;
-
-        const newRows = Array.from(rows);
-        
-        newRows.sort((rowA, rowB) => {
-            const cellA = rowA.querySelectorAll('td')[index].innerHTML;
-            const cellB = rowB.querySelectorAll('td')[index].innerHTML;
-
-            const a = transform(index, cellA);
-            const b = transform(index, cellB);
-
-            switch (true) {
-                case a > b: return 1 * multiplier;
-                case a < b: return -1 * multiplier;
-                case a === b: return 0;
-            }
-        });
-
-        // Remove old rows
-        [].forEach.call(rows, (row) => {
-            tableBody.removeChild(row);
-        });
-
-        // Append new rows
-        newRows.forEach((newRow) => {
-            tableBody.appendChild(newRow);
-        });
-
-        // Reverse the direction
-        directions[index] = direction === 'asc' ? 'desc' : 'asc';
-    };
-
-    [].forEach.call(headers, (header, index) => {
-        header.addEventListener('click', () => {
-            sortColumn(index);
-        });
-    });
-});
-
-    </script>
-</head>
-<body>
-    <div class="container-fluid">
-        <h1 class="mt-5">Stats Report</h1>
-        <p>${new Date().toISOString()}</p>
-        <table class="table table-responsive table-striped">
-            <thead>
-                <tr>
-                    <th>Scenario</th>
-                    <th>Element</th>
-                    <th>Step</th>
-                    <th>Success Rate</th>
-                    <th>Total</th>
-                    <th>Tags</th>
-                </tr>
-            </thead>
-            <tbody>
-             ${prepareRows(statsData)}
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>
-`;
+function buildHTML(statsData) {
+  const htmlTemplate = fs.readFileSync("./src/template.html", "utf-8");
+  const reportDate = new Date().toLocaleString();
+  const rows = prepareRows(statsData);
+  let finalHtml = htmlTemplate;
+  finalHtml = finalHtml.replace("{REPORT_DATE}", reportDate);
+  finalHtml = finalHtml.replace("{ROWS}", rows);
+  return finalHtml;
 }
 
 function prepareRows(statsData) {
@@ -364,37 +272,37 @@ function prepareRows(statsData) {
   Object.keys(statsData.features).map((feature, featureIndex) => {
     const featureData = statsData.getFeature(feature);
     const emptyCell = createHtmlElement("td", "-");
-    let scenarioRow = createHtmlElement("tr", "innerText");
-    const scenarioName = createHtmlElement(
+
+    let featureRow = createHtmlElement("tr", "{ROW}");
+    const featureName = createHtmlElement(
       "td",
       featureIndex + 1 + " - " + featureData.name,
       "string"
     );
-    const scenarioSuccessRate = createHtmlElement(
+    const featureSuccessRate = createHtmlElement(
       "td",
       featureData.successRateInPercent,
       "number"
     );
-    const scenarioCount = createHtmlElement("td", featureData.count, "number");
-    const scenarioTags = createHtmlElement(
+    const featureCount = createHtmlElement("td", featureData.count, "number");
+    const featureTags = createHtmlElement(
       "td",
       createBadges(featureData.tags)
     );
-    scenarioRow = scenarioRow.replace(
-      "innerText",
-      scenarioName +
-        emptyCell +
-        emptyCell +
-        scenarioSuccessRate +
-        scenarioCount +
-        scenarioTags
-    );
-    rows.push(scenarioRow);
+    featureRow = buildRow([
+      featureName,
+      emptyCell,
+      emptyCell,
+      featureSuccessRate,
+      featureCount,
+      featureTags,
+    ]);
+    rows.push(featureRow);
 
     Object.keys(featureData.elements).map((element, elementIndex) => {
       const elementData = featureData.getElement(element);
       let elementRow = createHtmlElement("tr", "innerText", "number");
-      const elementName = createHtmlElement("td", elementData.name, "string");
+      const elementName = createHtmlElement("td", (elementIndex+1) + ' - ' + elementData.name, "string");
       const elementSuccessRate = createHtmlElement(
         "td",
         elementData.successRateInPercent,
@@ -405,15 +313,14 @@ function prepareRows(statsData) {
         "td",
         createBadges(elementData.tags)
       );
-      elementRow = elementRow.replace(
-        "innerText",
-        scenarioName +
-          elementName +
-          emptyCell +
-          elementSuccessRate +
-          elementCount +
-          elementTags
-      );
+      elementRow = buildRow([
+        featureName,
+        elementName,
+        emptyCell,
+        elementSuccessRate,
+        elementCount,
+        elementTags,
+      ]);
       rows.push(elementRow);
 
       Object.keys(elementData.steps).map((step, stepIndex) => {
@@ -432,7 +339,7 @@ function prepareRows(statsData) {
         const stepCount = createHtmlElement("td", stepData.count, "number");
         stepRow = stepRow.replace(
           "innerText",
-          scenarioName +
+          featureName +
             elementName +
             stepName +
             stepSuccessRate +
@@ -446,6 +353,12 @@ function prepareRows(statsData) {
   return rows.join("");
 }
 
+function buildRow(cells) {
+  let rowTemplate = createHtmlElement("tr", "{ROW}");
+  const row = rowTemplate.replace("{ROW}", cells.join(""));
+  return row;
+}
+
 function createHtmlElement(element, text, dataType) {
   return `<${element} ${
     dataType ? `data-type="${dataType}"` : ""
@@ -453,8 +366,7 @@ function createHtmlElement(element, text, dataType) {
 }
 
 function createBadges(tags) {
-  
-  return tags && tags.map((tag) => createBadge(tag.name)).join("") | "";
+  return (tags && tags.map((tag) => createBadge(tag.name)).join("")) || "-";
 }
 
 function createBadge(text) {

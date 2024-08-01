@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        th {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid justify-content-center">
+        <h1 class="mt-5">Stats Report</h1>
+        <p>{REPORT_DATE}</p>
+        <table class="table table-responsive table-striped">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Scenario</th>
+                    <th>Step</th>
+                    <th>Success Rate</th>
+                    <th>Total</th>
+                    <th>Tags</th>
+                </tr>
+            </thead>
+            <tbody>
+                {ROWS}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
