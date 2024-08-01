@@ -336,11 +336,11 @@ function createHtmlElement(element, text, dataType) {
 }
 
 function createBadges(tags) {
-  return (tags && tags.map((tag) => createBadge(tag.name)).join("")) || "-";
+  return (tags && tags.map((tag) => createBadge(tag.name)).join(",")) || "-";
 }
 
 function createBadge(text) {
-  return `<span class="badge badge-primary">${text}</span>`;
+  return `<span class="">${text}</span>`;
 }
 
 module.exports = {
