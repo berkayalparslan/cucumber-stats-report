@@ -8,9 +8,12 @@ const jsonDirFlagIndex = args.findIndex((arg) => arg === "--jsonDir");
 const jsonDirFlagGiven = jsonDirFlagIndex !== -1;
 const jsonReportsDir = jsonDirFlagGiven
   ? args[jsonDirFlagIndex++]
-  : "./reports/archive/";
+  : "./reports/";
 const shouldShowOutput = args.includes("--showOutput");
-const shouldGenerateStatsReport = args.includes("--generate");
+const shouldGenerateStatsReport = !args.includes("--no-generate");
+const outputDirFlagIndex = args.findIndex(arg => arg === '--outputDir')
+const isOutputFlagSet = outputDirFlagIndex !== -1;
+const outputDir = isOutputFlagSet ? outputDirFlagIndex+1 : './reports/stats/';
 
 class StatsData {
   features = {};
@@ -185,43 +188,6 @@ class StepStats {
   }
 }
 
-// const statsReport = {
-//   statsData: {},
-//   getFeatureStats(featureId) {
-//     return this.statsData[featureId];
-//   },
-//   initFeatureStats(featureId) {
-//     if (!this.statsData[featureId]) {
-//       this.statsData[featureId] = {
-//         count: 0,
-//         name: "",
-//         elements: {},
-//         tags: [],
-//         results: [],
-//         successRateInPercent: 0,
-//       };
-//       return this.statsData[featureId];
-//     }
-//     throw new Error("feature exists already! - ", featureId);
-//   },
-//   getElementStats(featureId, elementId) {
-//     return this.statsData[featureId][elementId];
-//   },
-//   initElementStats(featureId, elementId) {
-//     if (!this.statsData[featureId].elements[elementId]) {
-//       this.statsData[featureId].elements[elementId] = {
-//         count: 0,
-//         name: "",
-//         steps: {},
-//         tags: [],
-//         results: [],
-//         successRateInPercent: 0,
-//       };
-//     }
-//     throw new Error("element exists already! - ", elementId);
-//   },
-// };
-
 if (shouldGenerateStatsReport) {
   generateStatsReport();
 }
@@ -242,7 +208,7 @@ function generateStatsReport() {
 }
 
 function collectStatsFromReportFiles(reportFilesPath, statsData) {
-  const regex = new RegExp("cucumber_report.*json");
+  const regex = new RegExp(".*json");
   const files = fs
     .readdirSync(reportFilesPath)
     .filter((file) => regex.test(file));
@@ -277,11 +243,10 @@ function collectStatsFromReportFile(features, statsData) {
 function generateHTMLStatsReport(statsData) {
   const html = generateHTML(statsData);
   const timestamp = new Date().toISOString().split(".")[0].replaceAll(":", "");
-  const statsFolderPath = "./reports/archive/stats/";
-  const filePath = path.join(statsFolderPath, `stats_${timestamp}.html`);
+  const filePath = path.join(outputDir, `stats_${timestamp}.html`);
 
-  if (!fs.existsSync(statsFolderPath)) {
-    fs.mkdirSync(statsFolderPath);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
   }
 
   fs.writeFileSync(filePath, html, "utf-8");
@@ -488,7 +453,8 @@ function createHtmlElement(element, text, dataType) {
 }
 
 function createBadges(tags) {
-  return tags.map((tag) => createBadge(tag.name)).join("");
+  
+  return tags && tags.map((tag) => createBadge(tag.name)).join("") | "";
 }
 
 function createBadge(text) {
