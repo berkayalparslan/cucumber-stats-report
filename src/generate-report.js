@@ -2,18 +2,7 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-const args = process.argv.slice(2);
-console.log(args);
-const jsonDirFlagIndex = args.findIndex((arg) => arg === "--jsonDir");
-const jsonDirFlagGiven = jsonDirFlagIndex !== -1;
-const jsonReportsDir = jsonDirFlagGiven
-  ? args[jsonDirFlagIndex++]
-  : "./reports/";
-const shouldShowOutput = args.includes("--showOutput");
-const shouldGenerateStatsReport = !args.includes("--no-generate");
-const outputDirFlagIndex = args.findIndex((arg) => arg === "--outputDir");
-const isOutputFlagSet = outputDirFlagIndex !== -1;
-const outputDir = isOutputFlagSet ? outputDirFlagIndex + 1 : "./reports/stats/";
+let options = {}
 
 class StatsData {
   features = {};
@@ -192,20 +181,17 @@ class StepStats {
   }
 }
 
-if (shouldGenerateStatsReport) {
-  generateStatsReport();
-}
-
 function logInConsole(text, isError = true) {
-  if (!shouldShowOutput) return;
+  if (!options.shouldShowOutput) return;
   const logMethod = isError ? console.error : console.log;
   logMethod(text);
 }
 
-function generateStatsReport() {
+function generateStatsReport(reportOptions) {
   const statsData = new StatsData();
+  options = reportOptions;
   logInConsole("started collecting stats.");
-  collectStatsFromReportFiles(jsonReportsDir, statsData);
+  collectStatsFromReportFiles(options.jsonReportsDir, statsData);
   logInConsole("finished collecting stats. Generating HTML report...");
   const htmlStatsReportPath = generateHTMLStatsReport(statsData);
   execSync(`open-cli ${htmlStatsReportPath}`);
@@ -247,10 +233,10 @@ function collectStatsFromReportFile(features, statsData) {
 function generateHTMLStatsReport(statsData) {
   const html = buildHTML(statsData);
   const timestamp = new Date().toISOString().split(".")[0].replaceAll(":", "");
-  const filePath = path.join(outputDir, `stats_${timestamp}.html`);
+  const filePath = path.join(options.outputDir, `stats_${timestamp}.html`);
 
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
+  if (!fs.existsSync(options.outputDir)) {
+    fs.mkdirSync(options.outputDir);
   }
 
   fs.writeFileSync(filePath, html, "utf-8");

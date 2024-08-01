@@ -1,18 +1,23 @@
 const fs = require("fs");
-const {generateStatsReport} = require('./generate-report');
+const {generateStatsReport} = require('./src/generate-report');
+
 
 const args = process.argv.slice(2);
-const isReportsDirFlagSet = args.find('--reportsDir')
-const reportsDir = isReportsDirFlagSet ? (args.findIndex('--reportsDir'))+1 : './reports/';
-const isOutputFlagSet = args.find('--outputDir');
-const outputDir = isOutputFlagSet ? (args.findIndex('--outputDir'))+1 : './reports/stats/';
+console.log(args);
+const jsonDirFlagIndex = args.findIndex((arg) => arg === "--jsonDir");
+const jsonDirFlagGiven = jsonDirFlagIndex !== -1;
+const jsonReportsDir = jsonDirFlagGiven
+  ? args[jsonDirFlagIndex++]
+  : "./reports/";
+const shouldShowOutput = args.includes("--showOutput");
+const shouldGenerateStatsReport = !args.includes("--no-generate");
+const outputDirFlagIndex = args.findIndex((arg) => arg === "--outputDir");
+const isOutputFlagSet = outputDirFlagIndex !== -1;
+const outputDir = isOutputFlagSet ? outputDirFlagIndex + 1 : "./reports/stats/";
 
-if(!fs.existsSync(reportsDir)){
-    throw new Error('reports directory is not found!');
-}
-
-if(!fs.existsSync(outputDir)){
-    fs.mkdirSync(outputDir);
-}
-
-generateStatsReport(reportsDir, outputDir);
+generateStatsReport({
+    jsonReportsDir: jsonReportsDir,
+    shouldShowOutput: shouldShowOutput,
+    shouldGenerateStatsReport: shouldGenerateStatsReport,
+    outputDir: outputDir
+});
