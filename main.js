@@ -21,3 +21,5 @@ generateStatsReport({
     shouldGenerateStatsReport: shouldGenerateStatsReport,
     outputDir: outputDir
 });
+
+module.exports = generateStatsReport;
