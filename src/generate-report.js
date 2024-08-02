@@ -317,8 +317,10 @@ function prepareRows(statsData) {
 
 function createDetailsCell(errors) {
   if (errors.length === 0) return createHtmlElement("td", "-");
-  const joinedErrors = errors.join('\n')
-  const detailsCell = `<td><button data-target="#errors-modal" class="details-btn" data-errors="${joinedErrors}">Details</button></td>`;
+  const detailsCell = `<td>
+  <button data-target="#errors-modal" class="details-btn">Details</button>
+  <textarea class="d-none">${JSON.stringify(errors)}</textarea>
+  </td>`;
   return detailsCell;
 }
 

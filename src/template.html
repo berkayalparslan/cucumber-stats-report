@@ -75,7 +75,8 @@
          const detailsButtons = document.querySelectorAll('.details-btn');
          detailsButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                const errorsData = btn.getAttribute('data-errors');
+              const errorsAsJson = btn.nextElementSibling.textContent;
+              const errors = JSON.parse(errorsAsJson);
                 
                 const modalBody = document.querySelector('#errors-modal .modal-body');
                 modalBody.innerHTML = buildErrorsList(errorsData);
@@ -87,7 +88,6 @@
             const listGroupTemplate = `
             <ul class="list-group">{LIST_GROUP}</ul>`
             const listGroupItemTemplate = '<li class="list-group-item">{LIST_GROUP_ITEM}</li>';
-            const splittedErrors = errors.split('\n');
             const errorCounts = countErrors(splittedErrors);
             const mappedErrors = Object.keys(errorCounts).map(err => listGroupItemTemplate.replace('{LIST_GROUP_ITEM}', `(${errorCounts[err]}) ` + err))
             let listGroupItems = mappedErrors.join('');
